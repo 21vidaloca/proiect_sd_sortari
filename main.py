@@ -1,68 +1,63 @@
-import time
+import sys
+import json
+import os
+sys.setrecursionlimit(10000) 
 
 #import sorting algorithms
 from sorts.merge_sort import merge_sort
 from sorts.heap_sort import heap_sort
-from sorts.insertion_sort import insertion_sort
-from sorts.shell_sort import shell_sort
+from sorts.basic_sorts import insertion_sort
 
-class Tester:
-    def __init__(self):
-        f_asc = open('./data/ascending.in', 'r')
-        f_desc = open('./data/descending.in', 'r')
-        f_rand = open('./data/random.in', 'r')
+from sorts.quicksort.quick_sort_3med import quick_sort_3med
+from sorts.quicksort.quick_sort_5med import quick_sort_5med
+from sorts.quicksort.quick_sort_first import quick_sort_first
+from sorts.quicksort.quick_sort_mid import quick_sort_mid
 
-        self.input_files = [f_asc, f_desc, f_rand]
+from sorts.timsort.tim_sort_128run import timsort128
+from sorts.timsort.tim_sort_512run import timsort512
+from sorts.timsort.tim_sort_32run import timsort32
 
-        self.function_name = {
-            'Merge Sort': merge_sort,
-            'Heap Sort': heap_sort,
-            'Shell Sort': shell_sort,
-            'Insertion Sort': insertion_sort
-        }
+from sorts.shellsort.shell_sort import shell_sort
+from sorts.shellsort.shell_sort_hibbard import shell_sort_hibbard
+from sorts.shellsort.shell_sort_sedgewick import shell_sort_sedgewick
 
-    def isSorted(self, v: list) -> bool:
-        for i in range(len(v)-1):
-            if v[i] > v[i+1]:
-                return False
-        return True
+from sorts.radix_sort import radix_sort_base10
+from sorts.radix_sort import radix_sort_base16
+from sorts.radix_sort import radix_sort_base16bit
 
-    def measure_sorting(self, sorting_fun: callable, v: list) -> float:
-        w = v.copy()
-        init_time = time.perf_counter()
-        sorting_fun(w)
-        final_time = time.perf_counter()
-        
-        if not self.isSorted(w) or set(w) != set(v):
-            print('Sorting failed!')
-            return None
-
-        elapsed = final_time - init_time
-        return elapsed
+#import tester 
+from tester import Tester
 
 
-    def test_sorting_algo_on_array(self, v:list):
-        for name in self.function_name:
-            elapsed = self.measure_sorting(self.function_name[name], v)
-            print(f'{name.upper()}: {elapsed:.6f}')
+sorting_name = {
+    'Shell Sort': shell_sort,
+    'Shell Sort Hibbard': shell_sort_hibbard,
+    'Shell Sort Sedgewick': shell_sort_sedgewick,
+    'Tim Sort 32': timsort32,
+    'Tim Sort 128': timsort128,
+    #'Tim Sort 512': timsort512,
+    'Built In Tim Sort': lambda arr: arr.sort(),
+    'Merge Sort': merge_sort,
+    'Heap Sort': heap_sort,
+    #'Quick Sort 3Med': quick_sort_3med,
+    #'Quick Sort 5Med': quick_sort_5med,
+    #'Quick Sort First': quick_sort_first,
+    #'Quick Sort Mid': quick_sort_mid,
+    'Radix Sort 10': radix_sort_base10,
+    'Radix Sort 16': radix_sort_base16,
+    'Radix Sort 16bit': radix_sort_base16bit
+}
 
-    def test(self):
-        for i in range(len(self.input_files)):
-            file = self.input_files[i]
-            print(f'----Testing first batch on file{i}----')
-            idx = 1
-            for line in file.readlines():
-                print(f'--Test_{idx}--')
+input_files = []
+for filename in os.listdir('data'):
+    input_files.append('./data/' + filename)
 
-                line = line.split()
-
-                v = []
-                for nmb in line:
-                    v.append(int(nmb))
-                self.test_sorting_algo_on_array(v)
-
-                idx += 1
+tester = Tester(*tuple(input_files))
 
 if __name__ == '__main__':
-    T = Tester()
-    T.test()
+    ans = tester.measure_sorting_algorithms(sorting_name)
+    print(ans)
+
+    with open('./results/data.json', 'w') as f:
+        json.dump(ans, f, indent=4)
+
